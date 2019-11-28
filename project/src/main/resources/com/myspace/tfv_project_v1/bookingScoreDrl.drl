@@ -1,0 +1,199 @@
+package com.myspace.tfv_project_v1;
+
+import com.Booking;
+import com.Translator;
+
+
+/**********************************************************************************************************
+*********************Hard CONSTRAINT*********************************************************************
+**********************************************************************************************************/
+
+rule "requiredLanguage"
+    when
+        $t:Translator($leftid:id,$languages:languages)
+        Booking(translator==$t,!translator.containsId(language,$languages))
+    then
+        scoreHolder.addHardConstraintMatch(kcontext, -10);
+end
+/*
+rule "requiredDistance"
+    when
+        com.customerDistance($idT:translator_id,$idB:booking_id,distance >120)
+        $t:Translator(id==$idT)
+        Booking(translator!=null,translator==$t,id==$idB,type!="Tfn")
+    then
+        scoreHolder.addHardConstraintMatch(kcontext, -10);
+end*/
+
+rule "translatorCannotGetJobSameTime"
+    
+when
+  Booking($id:id,translator!=null,$t:translator,$date:date,$start:start,$EndTime:endT)
+  Booking(id!=$id,translator!=null,translator==$t,date==$date,start.isBefore($EndTime),endT.isAfter($start))
+then
+  scoreHolder.addHardConstraintMatch(kcontext, -10);
+end
+
+/*rule "translatorCannotGetWhenTravelling"
+    
+when
+  $t:Translator($idT:id)
+  Booking($t==translator,$idB:id,$date:date,$start:start,$EndTime:endT,type!="Tfn")
+  com.customerDistance($idT==translator_id,$idB==booking_id,$duree:eta)
+  Booking(translator==$t,date==$date,start.isAfter($start.minusMinutes($duree)),start.isBefore($EndTime),type!="Tfn")
+then
+        
+scoreHolder.addHardConstraintMatch(kcontext, -10);
+
+end
+
+
+
+/**********************************************************************************************************
+*********************MEDUIM CONSTRAINT*********************************************************************
+**********************************************************************************************************/
+
+
+rule "translatorRank4tfm"
+    
+  when
+      $t:Translator($idT:id,level=="4")
+      Booking($t==translator,type=="Tfn");
+  then
+      scoreHolder.addMediumConstraintMatch(kcontext, 8);
+end
+
+rule "translatorRank3ForHctfm"
+
+when 
+      $t:Translator($idT:id,level=="3")
+      Booking($t==translator,type=="Tfn");
+then
+        scoreHolder.addMediumConstraintMatch(kcontext, 7);
+end
+
+rule "translatorRank2ForHctfm"
+
+when 
+      $t:Translator($idT:id,level=="2")
+      Booking($t==translator,type=="Tfn");
+then
+        scoreHolder.addMediumConstraintMatch(kcontext, 7);
+end
+
+rule "translatorRank1CForHctfm"
+
+when 
+      $t:Translator($idT:id,level=="1C")
+      Booking($t==translator,type=="Tfn");
+then
+        scoreHolder.addMediumConstraintMatch(kcontext, 3);
+end
+
+rule "translatorRank1BForHctfm"
+
+when 
+      $t:com.Translator($idT:id,level=="1B")
+      Booking($t==translator,type=="Tfn");
+then
+        scoreHolder.addMediumConstraintMatch(kcontext, 2);
+end
+
+rule "translatorRank1AForHtfmc"
+
+when 
+      $t:com.Translator($idT:id,level=="1A")
+      Booking($t==translator,type=="Tfn");
+then
+        scoreHolder.addMediumConstraintMatch(kcontext, 1);
+end
+
+rule "translatorRank4"
+    
+  when
+      $t:Translator($idT:id,level=="4")
+      com.customerDistance($idT==translator_id,$idB:booking_id,distance<100)
+      Booking($idB==id,$t==translator,type!="Tfn");
+  then
+      scoreHolder.addMediumConstraintMatch(kcontext, 8000);
+end
+
+rule "translatorRank3ForHc"
+
+when 
+      $t:Translator($idT:id,level=="3")
+      com.customerDistance($idT==translator_id,$idB:booking_id,distance<100)
+      Booking($idB==id,$t==translator,type!="Tfn");
+then
+        scoreHolder.addMediumConstraintMatch(kcontext, 7000);
+end
+
+rule "translatorRank2ForHc"
+
+when 
+      $t:Translator($idT:id,level=="2")
+      com.customerDistance($idT==translator_id,$idB:booking_id,distance<100)
+      Booking($idB==id,$t==translator,type!="Tfn");
+then
+        scoreHolder.addMediumConstraintMatch(kcontext, 7000);
+end
+
+rule "translatorRank1CForHc"
+
+when 
+      $t:Translator($idT:id,level=="1C")
+      com.customerDistance($idT==translator_id,$idB:booking_id,distance<80)
+      Booking($idB==id,$t==translator,type!="Tfn");
+then
+        scoreHolder.addMediumConstraintMatch(kcontext, 3000);
+end
+
+rule "translatorRank1BForHc"
+
+when 
+      $t:com.Translator($idT:id,level=="1B")
+      com.customerDistance($idT==translator_id,$idB:booking_id,distance<60)
+      Booking($idB==id,$t==translator,type!="Tfn");
+then
+        scoreHolder.addMediumConstraintMatch(kcontext, 2000);
+end
+
+rule "translatorRank1AForHc"
+
+when 
+      $t:Translator($idT:id,level=="1A")
+      com.customerDistance($idT==translator_id,$idB:booking_id,distance<40)
+      Booking($idB==id,$t==translator,type!="Tfn");
+then
+        scoreHolder.addMediumConstraintMatch(kcontext, 1000);
+end
+
+rule "unassigned"
+    
+  when
+      Booking(translator==null);
+  then
+      scoreHolder.addMediumConstraintMatch(kcontext, -1);
+end
+/**********************************************************************************************************
+*********************SOFT CONSTRAINT***********************************************************************
+**********************************************************************************************************/
+
+
+/*rule "translatorDistance"
+    when
+        com.customTranslatorDistance($t:translator,$dist:distance)
+        Booking($leftid:id,$t==translator);
+    then
+        scoreHolder.addSoftConstraintMatch(kcontext, -$dist);
+end*/
+/*
+rule "translatorBestFeedBack"
+
+    when
+        com.customerDistance($idt:translator_id,temp_travel_distance_public<=5 )
+        $t:com.Translator($idt==id,$feedBack:feedBack)
+        Booking($leftid:id,translator!=null,$t==translator)
+    then
+        scoreHolder.addSoftConstraintMatch(kcontext, $feedBack*10);
+end*/
